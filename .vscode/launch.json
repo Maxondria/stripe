@@ -1,0 +1,14 @@
+{
+	"configurations": [
+		{
+			"name": "Launch Maxondria",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"runtimeArgs": ["run-script", "dev"],
+			"runtimeExecutable": "npm",
+			"skipFiles": ["<node_internals>/**"],
+			"type": "node",
+			"console": "integratedTerminal"
+		}
+	]
+}
