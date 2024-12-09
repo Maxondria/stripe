@@ -9,17 +9,18 @@
 	} from '@stripe/stripe-js';
 	import { PUBLIC_STRIPE_PUBLISHABLE_KEY } from '$env/static/public';
 	import { onDestroy } from 'svelte';
+	import StripeCardElement from '$lib/components/StripeCardElement.svelte';
 
 	let stripe: Stripe | null = $state(null);
 	let elements: StripeElements | null = $state(null);
 
-	let cardNumberElement: StripeCardNumberElement | null = $state(null);
-	let cardExpiryElement: StripeCardExpiryElement | null = $state(null);
-	let cardCvcElement: StripeCardCvcElement | null = $state(null);
+	let cardNumberElement: StripeCardNumberElement | null = null;
+	let cardExpiryElement: StripeCardExpiryElement | null = null;
+	let cardCvcElement: StripeCardCvcElement | null = null;
 
-	let cardNumberRef: HTMLDivElement;
-	let cardExpiryRef: HTMLDivElement;
-	let cardCvcRef: HTMLDivElement;
+	let cardNumberRef: HTMLDivElement | null = $state(null);
+	let cardExpiryRef: HTMLDivElement | null = $state(null);
+	let cardCvcRef: HTMLDivElement | null = $state(null);
 
 	let cardHolderName = $state('');
 	let cardHolderState = $state('');
@@ -103,9 +104,9 @@
 				cardExpiryElement = elements.create('cardExpiry', { style: baseStyle });
 				cardCvcElement = elements.create('cardCvc', { style: baseStyle });
 
-				cardNumberElement.mount(cardNumberRef);
-				cardExpiryElement.mount(cardExpiryRef);
-				cardCvcElement.mount(cardCvcRef);
+				cardNumberElement.mount(cardNumberRef!);
+				cardExpiryElement.mount(cardExpiryRef!);
+				cardCvcElement.mount(cardCvcRef!);
 
 				// Setup events for all elements
 				setupCardNumberEventListeners(cardNumberElement);
@@ -228,26 +229,6 @@
 		isPaying = false;
 		isSuccess = true;
 	}
-
-	$effect(() => {
-		const cardImages = {
-			visa: '/images/visa.png',
-			mastercard: '/images/mastercard.png',
-			amex: '/images/amex.png',
-			discover: '/images/discover.png',
-			diners: '/images/diners.png',
-			jcb: '/images/jcb.png',
-			unionpay: '/images/unionpay.png',
-			unknown: '/images/unknown.png'
-		} as const;
-
-		const cardNumberElement = document.querySelector('.stripe-element-card-number');
-
-		if (cardNumberElement) {
-			const imageUrl = cardImages[cardType] || cardImages.unknown;
-			(cardNumberElement as HTMLElement).style.backgroundImage = `url(${imageUrl})`;
-		}
-	});
 </script>
 
 <h1 class="mb-8 text-3xl font-bold text-gray-800">Stripe Elements</h1>
@@ -313,119 +294,30 @@
 			/>
 
 			<div class="stripe-form">
-				<div class="stripe-input-wrapper">
-					<label class="stripe-label" for="card-number">Card Number</label>
-					<div
-						id="card-number"
-						class="stripe-input-container"
-						class:error={errors.cardNumber}
-						class:focused={focusedElement === 'cardNumber'}
-					>
-						<div bind:this={cardNumberRef} class="stripe-element stripe-element-card-number"></div>
-						{#if errors.cardNumber}
-							<div class="stripe-error-icon">
-								<svg
-									focusable="false"
-									preserveAspectRatio="xMidYMid meet"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="currentColor"
-									width="16"
-									height="16"
-									viewBox="0 0 16 16"
-									aria-hidden="true"
-								>
-									<path
-										d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
-									></path>
-									<path
-										d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
-										data-icon-path="inner-path"
-										opacity="0"
-									></path>
-								</svg>
-							</div>
-						{/if}
-					</div>
-					{#if errors.cardNumber}
-						<div class="stripe-form-requirement">{errors.cardNumber}</div>
-					{/if}
-				</div>
-
-				<div class="stripe-input-wrapper">
-					<label class="stripe-label" for="card-expiry">Expiry Date</label>
-					<div
-						id="card-expiry"
-						class="stripe-input-container"
-						class:error={errors.cardExpiry}
-						class:focused={focusedElement === 'cardExpiry'}
-					>
-						<div bind:this={cardExpiryRef} class="stripe-element stripe-element-expiry"></div>
-						{#if errors.cardExpiry}
-							<div class="stripe-error-icon">
-								<svg
-									focusable="false"
-									preserveAspectRatio="xMidYMid meet"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="currentColor"
-									width="16"
-									height="16"
-									viewBox="0 0 16 16"
-									aria-hidden="true"
-								>
-									<path
-										d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
-									></path>
-									<path
-										d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
-										data-icon-path="inner-path"
-										opacity="0"
-									></path>
-								</svg>
-							</div>
-						{/if}
-					</div>
-					{#if errors.cardExpiry}
-						<div class="stripe-form-requirement">{errors.cardExpiry}</div>
-					{/if}
-				</div>
-
-				<div class="stripe-input-wrapper">
-					<label class="stripe-label" for="card-cvc">Security Code</label>
-					<div
-						id="card-cvc"
-						class="stripe-input-container"
-						class:error={errors.cardCvc}
-						class:focused={focusedElement === 'cardCvc'}
-					>
-						<div bind:this={cardCvcRef} class="stripe-element stripe-element-cvc"></div>
-						{#if errors.cardCvc}
-							<div class="stripe-error-icon">
-								<svg
-									focusable="false"
-									preserveAspectRatio="xMidYMid meet"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="currentColor"
-									width="16"
-									height="16"
-									viewBox="0 0 16 16"
-									aria-hidden="true"
-								>
-									<path
-										d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
-									></path>
-									<path
-										d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
-										data-icon-path="inner-path"
-										opacity="0"
-									></path>
-								</svg>
-							</div>
-						{/if}
-					</div>
-					{#if errors.cardCvc}
-						<div class="stripe-form-requirement">{errors.cardCvc}</div>
-					{/if}
-				</div>
+				<StripeCardElement
+					bind:ref={cardNumberRef}
+					error={errors.cardNumber}
+					focused={focusedElement === 'cardNumber'}
+					label="Card Number"
+					type="cardNumber"
+					{cardType}
+				/>
+				<StripeCardElement
+					bind:ref={cardExpiryRef}
+					error={errors.cardExpiry}
+					focused={focusedElement === 'cardExpiry'}
+					label="Expiration Date"
+					type="cardExpiry"
+					{cardType}
+				/>
+				<StripeCardElement
+					bind:ref={cardCvcRef}
+					error={errors.cardCvc}
+					focused={focusedElement === 'cardCvc'}
+					label="Security Code"
+					type="cvc"
+					{cardType}
+				/>
 			</div>
 
 			<button
@@ -459,102 +351,5 @@
 			gap: 1.5rem;
 			max-width: 100%;
 		}
-
-		&-input-wrapper {
-			margin-bottom: 0;
-		}
-
-		&-label {
-			color: $stripe-label-color;
-			font: {
-				size: 0.75rem;
-				weight: 400;
-			}
-			letter-spacing: 0.32px;
-			line-height: 1.34;
-			margin-bottom: 0.5rem;
-			display: inline-block;
-		}
-
-		&-input-container {
-			position: relative;
-			width: 100%;
-			min-height: 2.5rem;
-			background-color: $stripe-bg-color;
-			border: none;
-			border-bottom: 1px solid $stripe-border-color;
-			transition:
-				background-color $stripe-transition,
-				outline $stripe-transition;
-
-			&.focused:not(.error) {
-				outline: $stripe-outline-width solid $stripe-focus-color;
-				outline-offset: -$stripe-outline-width;
-			}
-
-			&.error {
-				outline: $stripe-outline-width solid $stripe-error-color;
-				outline-offset: -$stripe-outline-width;
-				border-bottom-color: $stripe-error-color;
-
-				&.focused {
-					outline: $stripe-outline-width solid $stripe-error-color;
-					outline-offset: -$stripe-outline-width;
-				}
-
-				.stripe-error-icon {
-					position: absolute;
-					right: 0.5rem;
-					top: 50%;
-					transform: translateY(-50%);
-					color: $stripe-error-color;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					pointer-events: none;
-				}
-			}
-
-			&.error .stripe-element-card-number {
-				background-position: right 0.8rem center;
-			}
-		}
-
-		&-element {
-			width: 100%;
-			padding: 0 1rem;
-			position: absolute;
-			top: 50%;
-			transform: translateY(-50%);
-
-			&-card-number {
-				background: {
-					repeat: no-repeat;
-					position: right -0.8rem center;
-					size: 1.7rem;
-					origin: content-box;
-				}
-			}
-
-			&-cvc {
-				background: {
-					repeat: no-repeat;
-					position: right -0.8rem center;
-					size: 1.7rem;
-					origin: content-box;
-					image: url('/images/cvc.png');
-				}
-			}
-		}
-	}
-
-	.stripe-form-requirement {
-		margin-top: 0.25rem;
-		font: {
-			size: 0.75rem;
-			weight: 400;
-		}
-		line-height: 1.34;
-		color: $stripe-error-color;
 	}
 </style>
