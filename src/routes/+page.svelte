@@ -9,7 +9,7 @@
 	} from '@stripe/stripe-js';
 	import { PUBLIC_STRIPE_PUBLISHABLE_KEY } from '$env/static/public';
 	import { onDestroy } from 'svelte';
-	import StripeCardElement from '$lib/components/StripeCardElement.svelte';
+	import StripeCardField from '$lib/components/StripeCardField.svelte';
 
 	let stripe: Stripe | null = $state(null);
 	let elements: StripeElements | null = $state(null);
@@ -294,7 +294,7 @@
 			/>
 
 			<div class="stripe-form">
-				<StripeCardElement
+				<StripeCardField
 					bind:ref={cardNumberRef}
 					error={errors.cardNumber}
 					focused={focusedElement === 'cardNumber'}
@@ -302,7 +302,7 @@
 					type="cardNumber"
 					{cardType}
 				/>
-				<StripeCardElement
+				<StripeCardField
 					bind:ref={cardExpiryRef}
 					error={errors.cardExpiry}
 					focused={focusedElement === 'cardExpiry'}
@@ -310,7 +310,7 @@
 					type="cardExpiry"
 					{cardType}
 				/>
-				<StripeCardElement
+				<StripeCardField
 					bind:ref={cardCvcRef}
 					error={errors.cardCvc}
 					focused={focusedElement === 'cardCvc'}
