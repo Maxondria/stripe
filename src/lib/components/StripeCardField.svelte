@@ -29,18 +29,18 @@
 
 	$effect(() => {
 		if (type === 'cardNumber' && ref) {
-			const cardImages = {
-				visa: '/images/visa.png',
-				mastercard: '/images/mastercard.png',
-				amex: '/images/amex.png',
-				discover: '/images/discover.png',
-				diners: '/images/diners.png',
-				jcb: '/images/jcb.png',
-				unionpay: '/images/unionpay.png',
-				unknown: '/images/unknown.png'
-			} as const;
+			const cardImages = new Map([
+				['visa', '/images/visa.png'],
+				['mastercard', '/images/mastercard.png'],
+				['amex', '/images/amex.png'],
+				['discover', '/images/discover.png'],
+				['diners', '/images/diners.png'],
+				['jcb', '/images/jcb.png'],
+				['unionpay', '/images/unionpay.png'],
+				['unknown', '/images/unknown.png']
+			]);
 
-			const cardImagePath = cardImages[cardType] || cardImages.unknown;
+			const cardImagePath = cardImages.get(cardType) || cardImages.get('unknown');
 			ref.style.backgroundImage = `url(${cardImagePath})`;
 		}
 	});
