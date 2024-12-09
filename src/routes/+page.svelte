@@ -4,11 +4,11 @@
 		type Stripe,
 		type StripeCardCvcElement,
 		type StripeCardExpiryElement,
-		// type StripeCardElement,
 		type StripeCardNumberElement,
 		type StripeElements
 	} from '@stripe/stripe-js';
 	import { PUBLIC_STRIPE_PUBLISHABLE_KEY } from '$env/static/public';
+	import { onDestroy } from 'svelte';
 
 	let stripe: Stripe | null = $state(null);
 	let elements: StripeElements | null = $state(null);
@@ -16,6 +16,10 @@
 	let cardNumberElement: StripeCardNumberElement | null = $state(null);
 	let cardExpiryElement: StripeCardExpiryElement | null = $state(null);
 	let cardCvcElement: StripeCardCvcElement | null = $state(null);
+
+	let cardNumberRef: HTMLDivElement;
+	let cardExpiryRef: HTMLDivElement;
+	let cardCvcRef: HTMLDivElement;
 
 	let cardHolderName = $state('');
 	let cardHolderState = $state('');
@@ -36,6 +40,28 @@
 	let isSuccess = $state(false);
 	let isPaying = $state(false);
 	let isError = $state(false);
+	let focusedElement = $state<'cardNumber' | 'cardExpiry' | 'cardCvc' | null>(null);
+
+	const setupCardNumberEventListeners = (element: StripeCardNumberElement) => {
+		element.on('change', (event) => {
+			cardType = event.brand;
+			errors.cardNumber = event.error?.message ?? null;
+		});
+		element.on('focus', () => (focusedElement = 'cardNumber'));
+		element.on('blur', () => (focusedElement = null));
+	};
+
+	const setupCardExpiryEventListeners = (element: StripeCardExpiryElement) => {
+		element.on('change', (event) => (errors.cardExpiry = event.error?.message ?? null));
+		element.on('focus', () => (focusedElement = 'cardExpiry'));
+		element.on('blur', () => (focusedElement = null));
+	};
+
+	const setupCardCvcEventListeners = (element: StripeCardCvcElement) => {
+		element.on('change', (event) => (errors.cardCvc = event.error?.message ?? null));
+		element.on('focus', () => (focusedElement = 'cardCvc'));
+		element.on('blur', () => (focusedElement = null));
+	};
 
 	$effect(() => {
 		loadStripe(PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -46,37 +72,30 @@
 				}
 
 				stripe = stripeInstance;
-				/**
-				 * Custom font configuration for Stripe Elements
-				 *
-				 * To use Montserrat font family in the card element:
-				 * 1. Uncomment and replace the default elements initialization:
-				 *    elements = stripe.elements({
-				 *        fonts: [
-				 *            {
-				 *                cssSrc: 'https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap'
-				 *            }
-				 *        ]
-				 *    });
-				 *
-				 * 2. Update the card element's style object fontFamily to:
-				 *    fontFamily: 'Montserrat, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
-				 */
 
-				elements = stripe.elements();
+				elements = stripe.elements({
+					fonts: [
+						{
+							cssSrc:
+								'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap'
+						}
+					]
+				});
 
 				const baseStyle = {
 					base: {
-						color: 'blue',
-						fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
-						fontSize: '16px',
+						color: '#161616',
+						fontFamily: 'IBM Plex Sans, sans-serif',
+						fontSize: '14px',
+						fontWeight: '400',
 						'::placeholder': {
-							color: '#a0aec0'
-						}
+							color: '#6f6f6f'
+						},
+						backgroundColor: 'transparent'
 					},
 					invalid: {
-						color: '#ef4444',
-						iconColor: '#ef4444'
+						color: '#161616',
+						iconColor: '#161616'
 					}
 				};
 
@@ -84,34 +103,24 @@
 				cardExpiryElement = elements.create('cardExpiry', { style: baseStyle });
 				cardCvcElement = elements.create('cardCvc', { style: baseStyle });
 
-				/**
-				 * Mount the elements and set the errors
-				 */
+				cardNumberElement.mount(cardNumberRef);
+				cardExpiryElement.mount(cardExpiryRef);
+				cardCvcElement.mount(cardCvcRef);
 
-				cardNumberElement.mount('#card-number-element');
-				cardExpiryElement.mount('#card-expiry-element');
-				cardCvcElement.mount('#card-cvc-element');
-
-				cardNumberElement.on('change', (event) => {
-					cardType = event.brand;
-					errors.cardNumber = event.error?.message ?? null;
-				});
-
-				cardExpiryElement.on('change', (event) => {
-					errors.cardExpiry = event.error?.message ?? null;
-				});
-
-				cardCvcElement.on('change', (event) => {
-					errors.cardCvc = event.error?.message ?? null;
-				});
+				// Setup events for all elements
+				setupCardNumberEventListeners(cardNumberElement);
+				setupCardExpiryEventListeners(cardExpiryElement);
+				setupCardCvcEventListeners(cardCvcElement);
 			})
 			.catch((error) => {
 				console.error('Error loading Stripe:', error);
 			});
+	});
 
-		return () => {
-			cardNumberElement?.unmount();
-		};
+	onDestroy(() => {
+		cardNumberElement?.unmount();
+		cardExpiryElement?.unmount();
+		cardCvcElement?.unmount();
 	});
 
 	/**
@@ -228,16 +237,15 @@
 			discover: '/images/discover.png',
 			diners: '/images/diners.png',
 			jcb: '/images/jcb.png',
+			unionpay: '/images/unionpay.png',
 			unknown: '/images/unknown.png'
 		} as const;
-		/**
-		 * We should be able to use the ref to set the background image
-		 */
-		const cardElement = document.getElementById('card-number-element');
 
-		if (cardElement) {
-			const imageUrl = cardImages[cardType as keyof typeof cardImages] || cardImages.unknown;
-			cardElement.style.backgroundImage = `url(${imageUrl})`;
+		const cardNumberElement = document.querySelector('.stripe-element-card-number');
+
+		if (cardNumberElement) {
+			const imageUrl = cardImages[cardType] || cardImages.unknown;
+			(cardNumberElement as HTMLElement).style.backgroundImage = `url(${imageUrl})`;
 		}
 	});
 </script>
@@ -286,11 +294,6 @@
 			</div>
 		{/if}
 		<div class="flex w-full flex-col gap-2 text-sm">
-			<!-- <label for="card-element" class="text-gray-700">Credit or debit card</label>
-			<div
-				id="card-element"
-				class="my-2 rounded-md border border-blue-300 bg-white p-4 text-blue-500 shadow-sm outline-none"
-			></div> -->
 			<label for="card-holder-name" class="text-gray-700">Card Holder Name</label>
 			<input
 				id="card-holder-name"
@@ -309,52 +312,164 @@
 				class="my-2 rounded-md border border-blue-300 bg-white p-4 text-blue-500 shadow-sm outline-none"
 			/>
 
-			<label for="card-number-element" class="text-gray-700">Card Number</label>
-			<div
-				id="card-number-element"
-				class="my-2 rounded-md border border-blue-300 bg-white p-4 text-blue-500 shadow-sm outline-none"
-			></div>
+			<div class="stripe-form">
+				<div class="stripe-input-wrapper">
+					<label class="stripe-label" for="card-number">Card Number</label>
+					<div
+						id="card-number"
+						class="stripe-input-container"
+						class:error={errors.cardNumber}
+						class:focused={focusedElement === 'cardNumber'}
+					>
+						<div bind:this={cardNumberRef} class="stripe-element stripe-element-card-number"></div>
+					</div>
+					{#if errors.cardNumber}
+						<div class="stripe-form-requirement">{errors.cardNumber}</div>
+					{/if}
+				</div>
 
-			<label for="card-expiry-element" class="text-gray-700">Expiry Date</label>
-			<div
-				id="card-expiry-element"
-				class="my-2 rounded-md border border-blue-300 bg-white p-4 text-blue-500 shadow-sm outline-none"
-			></div>
+				<div class="stripe-input-wrapper">
+					<label class="stripe-label" for="card-expiry">Expiry Date</label>
+					<div
+						id="card-expiry"
+						class="stripe-input-container"
+						class:error={errors.cardExpiry}
+						class:focused={focusedElement === 'cardExpiry'}
+					>
+						<div bind:this={cardExpiryRef} class="stripe-element stripe-element-expiry"></div>
+					</div>
+					{#if errors.cardExpiry}
+						<div class="stripe-form-requirement">{errors.cardExpiry}</div>
+					{/if}
+				</div>
 
-			<label for="card-cvc-element" class="text-gray-700">CVC</label>
-			<div
-				id="card-cvc-element"
-				class="my-2 rounded-md border border-blue-300 bg-white p-4 text-blue-500 shadow-sm outline-none"
-			></div>
+				<div class="stripe-input-wrapper">
+					<label class="stripe-label" for="card-cvc">Security Code</label>
+					<div
+						id="card-cvc"
+						class="stripe-input-container"
+						class:error={errors.cardCvc}
+						class:focused={focusedElement === 'cardCvc'}
+					>
+						<div bind:this={cardCvcRef} class="stripe-element stripe-element-cvc"></div>
+					</div>
+					{#if errors.cardCvc}
+						<div class="stripe-form-requirement">{errors.cardCvc}</div>
+					{/if}
+				</div>
+			</div>
+
+			<button
+				type="submit"
+				onclick={handleSubmit}
+				class="rounded-md bg-blue-500 px-6 py-2.5 font-medium text-white
+					   transition-colors duration-200 hover:bg-blue-600
+					   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+					   active:bg-blue-700"
+			>
+				Pay $1000
+			</button>
 		</div>
-
-		<button
-			type="submit"
-			onclick={handleSubmit}
-			class="rounded-md bg-blue-500 px-6 py-2.5 font-medium text-white
-				   transition-colors duration-200 hover:bg-blue-600
-				   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-				   active:bg-blue-700"
-		>
-			Pay $1000
-		</button>
 	</div>
 </form>
 
-<style>
-	#card-number-element {
-		background-image: url('/images/cvc.png');
-		background-repeat: no-repeat;
-		background-position: right center;
-		background-size: 30px;
-		background-origin: content-box;
+<style lang="scss">
+	$stripe-text-color: #161616;
+	$stripe-label-color: #525252;
+	$stripe-border-color: #8d8d8d;
+	$stripe-bg-color: #f4f4f4;
+	$stripe-focus-color: #0f62fe;
+	$stripe-error-color: #da1e28;
+
+	$stripe-transition: 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+	$stripe-outline-width: 2px;
+
+	.stripe {
+		&-form {
+			display: grid;
+			gap: 1.5rem;
+			max-width: 100%;
+		}
+
+		&-input-wrapper {
+			margin-bottom: 0;
+		}
+
+		&-label {
+			color: $stripe-label-color;
+			font: {
+				size: 0.75rem;
+				weight: 400;
+			}
+			letter-spacing: 0.32px;
+			line-height: 1.34;
+			margin-bottom: 0.5rem;
+			display: inline-block;
+		}
+
+		&-input-container {
+			position: relative;
+			width: 100%;
+			min-height: 2.5rem;
+			background-color: $stripe-bg-color;
+			border: none;
+			border-bottom: 1px solid $stripe-border-color;
+			transition:
+				background-color $stripe-transition,
+				outline $stripe-transition;
+
+			&.focused:not(.error) {
+				outline: $stripe-outline-width solid $stripe-focus-color;
+				outline-offset: -$stripe-outline-width;
+			}
+
+			&.error {
+				outline: $stripe-outline-width solid $stripe-error-color;
+				outline-offset: -$stripe-outline-width;
+				border-bottom-color: $stripe-error-color;
+
+				&.focused {
+					outline: $stripe-outline-width solid $stripe-error-color;
+					outline-offset: -$stripe-outline-width;
+				}
+			}
+		}
+
+		&-element {
+			width: 100%;
+			padding: 0 1rem;
+			position: absolute;
+			top: 50%;
+			transform: translateY(-50%);
+
+			&-card-number {
+				background: {
+					repeat: no-repeat;
+					position: right -0.5rem center;
+					size: 1.7rem;
+					origin: content-box;
+				}
+			}
+
+			&-cvc {
+				background: {
+					repeat: no-repeat;
+					position: right -0.5rem center;
+					size: 1.7rem;
+					origin: content-box;
+					image: url('/images/cvc.png');
+				}
+			}
+		}
 	}
 
-	#card-cvc-element {
-		background-image: url('/images/cvc.png');
-		background-repeat: no-repeat;
-		background-position: right center;
-		background-size: 30px;
-		background-origin: content-box;
+	.stripe-form-requirement {
+		margin-top: 0.25rem;
+		font: {
+			size: 0.75rem;
+			weight: 400;
+		}
+		line-height: 1.34;
+		color: $stripe-error-color;
 	}
 </style>

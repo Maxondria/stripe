@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import '../theme/_carbon.theme.scss';
 	let { children } = $props();
 </script>
 

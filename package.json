@@ -32,7 +32,11 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
+		"@carbon/themes": "^11.43.0",
 		"@stripe/stripe-js": "^5.2.0",
+		"carbon-components-svelte": "^0.86.2",
+		"carbon-icons-svelte": "^12.13.0",
+		"sass": "^1.69.0",
 		"stripe": "^17.4.0"
 	}
 }

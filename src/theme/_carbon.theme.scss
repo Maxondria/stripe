@@ -1,0 +1,18 @@
+@use '@carbon/themes/scss/themes' as *;
+@use '@carbon/themes';
+
+:root {
+	@include themes.theme($g100);
+}
+
+[data-theme='g10'] {
+	@include themes.theme($g10);
+}
+
+[data-theme='g90'] {
+	@include themes.theme($g90);
+}
+
+[data-theme='g100'] {
+	@include themes.theme($g100);
+}
