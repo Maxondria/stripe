@@ -322,6 +322,29 @@
 						class:focused={focusedElement === 'cardNumber'}
 					>
 						<div bind:this={cardNumberRef} class="stripe-element stripe-element-card-number"></div>
+						{#if errors.cardNumber}
+							<div class="stripe-error-icon">
+								<svg
+									focusable="false"
+									preserveAspectRatio="xMidYMid meet"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="currentColor"
+									width="16"
+									height="16"
+									viewBox="0 0 16 16"
+									aria-hidden="true"
+								>
+									<path
+										d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
+									></path>
+									<path
+										d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
+										data-icon-path="inner-path"
+										opacity="0"
+									></path>
+								</svg>
+							</div>
+						{/if}
 					</div>
 					{#if errors.cardNumber}
 						<div class="stripe-form-requirement">{errors.cardNumber}</div>
@@ -337,6 +360,29 @@
 						class:focused={focusedElement === 'cardExpiry'}
 					>
 						<div bind:this={cardExpiryRef} class="stripe-element stripe-element-expiry"></div>
+						{#if errors.cardExpiry}
+							<div class="stripe-error-icon">
+								<svg
+									focusable="false"
+									preserveAspectRatio="xMidYMid meet"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="currentColor"
+									width="16"
+									height="16"
+									viewBox="0 0 16 16"
+									aria-hidden="true"
+								>
+									<path
+										d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
+									></path>
+									<path
+										d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
+										data-icon-path="inner-path"
+										opacity="0"
+									></path>
+								</svg>
+							</div>
+						{/if}
 					</div>
 					{#if errors.cardExpiry}
 						<div class="stripe-form-requirement">{errors.cardExpiry}</div>
@@ -352,6 +398,29 @@
 						class:focused={focusedElement === 'cardCvc'}
 					>
 						<div bind:this={cardCvcRef} class="stripe-element stripe-element-cvc"></div>
+						{#if errors.cardCvc}
+							<div class="stripe-error-icon">
+								<svg
+									focusable="false"
+									preserveAspectRatio="xMidYMid meet"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="currentColor"
+									width="16"
+									height="16"
+									viewBox="0 0 16 16"
+									aria-hidden="true"
+								>
+									<path
+										d="M8,1C4.2,1,1,4.2,1,8s3.2,7,7,7s7-3.1,7-7S11.9,1,8,1z M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2	c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
+									></path>
+									<path
+										d="M7.5,4h1v5h-1C7.5,9,7.5,4,7.5,4z M8,12.2c-0.4,0-0.8-0.4-0.8-0.8s0.3-0.8,0.8-0.8	c0.4,0,0.8,0.4,0.8,0.8S8.4,12.2,8,12.2z"
+										data-icon-path="inner-path"
+										opacity="0"
+									></path>
+								</svg>
+							</div>
+						{/if}
 					</div>
 					{#if errors.cardCvc}
 						<div class="stripe-form-requirement">{errors.cardCvc}</div>
@@ -432,6 +501,22 @@
 					outline: $stripe-outline-width solid $stripe-error-color;
 					outline-offset: -$stripe-outline-width;
 				}
+
+				.stripe-error-icon {
+					position: absolute;
+					right: 0.5rem;
+					top: 50%;
+					transform: translateY(-50%);
+					color: $stripe-error-color;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					pointer-events: none;
+				}
+			}
+
+			&.error .stripe-element-card-number {
+				background-position: right 0.8rem center;
 			}
 		}
 
@@ -445,7 +530,7 @@
 			&-card-number {
 				background: {
 					repeat: no-repeat;
-					position: right -0.5rem center;
+					position: right -0.8rem center;
 					size: 1.7rem;
 					origin: content-box;
 				}
@@ -454,7 +539,7 @@
 			&-cvc {
 				background: {
 					repeat: no-repeat;
-					position: right -0.5rem center;
+					position: right -0.8rem center;
 					size: 1.7rem;
 					origin: content-box;
 					image: url('/images/cvc.png');
