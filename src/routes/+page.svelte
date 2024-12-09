@@ -205,6 +205,7 @@
 			},
 			body: JSON.stringify({
 				paymentMethodId: paymentMethod.id,
+				email: 'johndoe@example.com',
 				profileId: crypto.randomUUID()
 			})
 		});
@@ -215,9 +216,19 @@
 			return;
 		}
 
-		const data = await response.json();
+		const { clientSecret } = await response.json();
 
-		console.log(data);
+		const { error: err, paymentIntent } = await stripe.confirmCardPayment(clientSecret);
+
+		if (err) {
+			console.error('Error:', err);
+			isPaying = false;
+			return;
+		}
+
+		if (paymentIntent.status === 'succeeded') {
+			isSuccess = true;
+		}
 
 		cardNumberElement.clear();
 		cardExpiryElement.clear();
